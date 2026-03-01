@@ -15,9 +15,9 @@ firewall --enabled --service=ssh
 
 # ── Bootloader ────────────────────────────────────────────────
 bootloader --location=mbr --boot-drive=sda \
-  --append="quiet splash mitigations=off nowatchdog nohz_full=1-$(nproc --ignore=1) rcu_nocbs=1-$(nproc --ignore=1) transparent_hugepage=madvise"
+  --append="quiet splash mitigations=off nowatchdog nohz_full=1-7 rcu_nocbs=1-7 transparent_hugepage=madvise vm.swappiness=1 kernel.nmi_watchdog=0"
 # mitigations=off   → removes spectre/meltdown perf penalties (gaming trade-off)
-# nohz_full         → tickless CPU cores (less interrupt latency)
+# nohz_full=1-7     → tickless CPU cores (assumes 8-core CPU, safe for all)
 # transparent_hugepage=madvise → better RAM use for games
 
 # ── Disk layout ───────────────────────────────────────────────
@@ -41,7 +41,7 @@ repo --name=terra         --baseurl=https://terra.fyralabs.com/terra40
 repo --name=copr-mangohud --baseurl=https://download.copr.fedorainfracloud.org/results/gloriouseggroll/mangohud/fedora-40-x86_64/
 
 # ── Package groups & individual packages ─────────────────────
-%packages --excludedocs --instLangs=en
+%packages --excludedocs
 # === Core System ===
 @core
 @hardware-support
