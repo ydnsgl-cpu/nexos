@@ -1,0 +1,64 @@
+name: Build NexOS ISO
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    name: Build NexOS ISO
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:40
+      options: --privileged
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y \
+            lorax \
+            pykickstart \
+            anaconda \
+            curl \
+            genisoimage \
+            syslinux \
+            squashfs-tools \
+            grub2-tools \
+            xorriso \
+            --setopt=install_weak_deps=False
+
+      - name: Validate kickstart file
+        run: ksvalidator kickstart/nexos.ks
+
+      - name: Build ISO
+        run: |
+          mkdir -p /tmp/nexos-result
+          livemedia-creator \
+            --ks=kickstart/nexos.ks \
+            --no-virt \
+            --resultdir=/tmp/nexos-result \
+            --project="NexOS" \
+            --make-iso \
+            --volid="NexOS-Gaming-1.0" \
+            --iso-only \
+            --iso-name="NexOS-1.0-x86_64.iso" \
+            --releasever=40 \
+            --title="NexOS Gaming Linux 1.0"
+
+      - name: Generate checksum
+        run: |
+          cd /tmp/nexos-result
+          sha256sum NexOS-1.0-x86_64.iso > NexOS-1.0-x86_64.iso.sha256
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: NexOS-1.0-x86_64
+          path: |
+            /tmp/nexos-result/NexOS-1.0-x86_64.iso
+            /tmp/nexos-result/NexOS-1.0-x86_64.iso.sha256
+          retention-days: 30
